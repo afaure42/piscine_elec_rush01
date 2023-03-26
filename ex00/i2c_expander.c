@@ -1,28 +1,6 @@
 #include "i2c_expander.h"
 
-#define EXPANDER_ADDR 0b00100000
 
-#define SW3 0
-#define LED_D9  3
-#define LED_D10 2
-#define LED_D11 1
-#define SEGMENT_DIGIT_0 4
-#define SEGMENT_DIGIT 1 5
-#define SEGMENT_DIGIT_2 6
-#define SEGMENT_DIGIT_3 7
-
-#define SELECT_INPUT_PORT0 0
-#define SELECT_INPUT_PORT1 1
-#define SELECT_OUTPUT_PORT0 2
-#define SELECT_OUTPUT_PORT1 3
-#define SELECT_CONFIG_PORT0 6
-#define SELECT_CONFIG_PORT1 7
-
-#define EXPANDER_REGISTER_0 0
-#define EXPANDER_REGISTER_1 1
-
-
-#define SEGMENT_DOT (0b10000000)
 
 uint8_t segment_display_buffer[4];
 uint8_t segment_display_index;
@@ -76,37 +54,86 @@ void expander_init()
 
 }
 
-void expander_segment_select_digit(uint8_t select_digit)
+uint8_t expander_segment_select_digit(uint8_t select_digit)
 {
-	uint8_t status = expander_get_register(SELECT_OUTPUT_PORT0);
+	uint8_t status;
+	if (expander_get_register(SELECT_OUTPUT_PORT0, &status) != 0)
+		return (1);
 
 	status |= 0b11110000; //clear digits ( clearing is setting bits)
 
 	status &= ~(1 << segment_digit_pins[select_digit]);
 
-	expander_set_register(SELECT_OUTPUT_PORT0, status);
+	return (expander_set_register(SELECT_OUTPUT_PORT0, status));
 }
 
-uint8_t expander_get_register(uint8_t select_register)
+uint8_t expander_get_register(uint8_t select_register, uint8_t * dest)
 {
 	uint8_t command;
-	uint8_t ret = 0;
 	command = select_register;
+
+	//sending write 
 	i2c_start(EXPANDER_ADDR, TW_WRITE);
+	if (TWSR != TW_MT_SLA_ACK)
+		return (1);
+
+	//selecting register
 	i2c_send_byte(&command, 1);
+	if (TWSR != TW_MT_DATA_ACK)
+		return (1);
+
+	//going in read mode using repeated start	
 	i2c_start(EXPANDER_ADDR, TW_READ);
-	i2c_read_byte(&ret, 1);
+	if (TWSR != TW_MR_SLA_ACK)
+		return (1);
+
+	//reading register value
+	i2c_read_byte(dest, 1);
+	if (TWSR != TW_MR_DATA_NACK)
+		return (1);
+
 	i2c_stop();
-	return ret;
+	return 0;
 }
 
-void expander_set_register(uint8_t select_register, uint8_t register_status)
+uint8_t expander_set_register(uint8_t select_register, uint8_t register_status)
 {
 	i2c_start(EXPANDER_ADDR, TW_WRITE);
+	if ((TWSR & TW_STATUS_MASK) != TW_MT_SLA_ACK) {
+		i2c_stop();
+		return (1);
+	}
+
 	i2c_send_byte(&select_register, 1);
+	if ((TWSR & TW_STATUS_MASK) != TW_MT_DATA_ACK) {
+		i2c_stop();
+		return (1);
+	}
+
 	i2c_send_byte(&register_status, 1);
+	if ((TWSR & TW_STATUS_MASK) != TW_MT_DATA_ACK) {
+		i2c_stop();
+		return (1);
+	}
+
 	i2c_stop();
+	return (0);
 }
+
+uint8_t exp_set_pin(uint8_t led_id, uint8_t status)
+{
+	uint8_t register_status;
+	if (expander_get_register(EXPANDER_REGISTER_0, &register_status) != 0)
+		return 1;
+
+	if (status == 0)
+		register_status |= (1 << led_id);
+	else
+		register_status &= ~(1 << led_id);
+	
+	return (expander_set_register(SELECT_OUTPUT_PORT0, register_status));
+}
+
 
 void segment_putnbr(uint16_t nbr)
 {
