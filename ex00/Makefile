@@ -23,7 +23,7 @@ $(BIN):	$(OBJS)
 	$(CC) $(CFLAGS) $(CPPFLAGS) $^ -o $@
 
 %.o:	%.c
-	$(CC) $(CFLAGS) -c $< -o $@
+	$(CC) $(CFLAGS) $(CPPFLAGS) -c $< -o $@
 
 $(NAME): $(BIN)
 	avr-objcopy -O ihex ${BIN} ${NAME}
