@@ -3,8 +3,14 @@
 
 
 uint8_t segment_display_buffer[4];
-uint8_t segment_display_index;
-const uint8_t segment_digit_pins[4];
+uint8_t segment_display_index = 0;
+const uint8_t segment_digit_pins[] =
+{
+	7,
+	6,
+	5,
+	4,
+};
 
 volatile uint8_t segment_digits[] =
 {
