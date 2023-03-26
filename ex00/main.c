@@ -1,9 +1,4 @@
-#include <avr/interrupt.h>
-#include <util/delay.h>
-#include <avr/io.h>
-#include "uart.h"
-#include "i2c.h"
-#include "i2c_expander.h"
+#include "rush.h"
 
 extern uint8_t segment_display_buffer[4];
 extern uint8_t segment_display_index;

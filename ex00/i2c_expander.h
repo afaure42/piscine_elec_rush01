@@ -1,3 +1,5 @@
+#include "rush.h"
+
 #ifndef I2C_EXPANDER_H
 #define I2C_EXPANDER_H
 
