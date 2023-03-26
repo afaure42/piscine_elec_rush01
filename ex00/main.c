@@ -7,7 +7,15 @@ volatile uint8_t g_switch1_counter;
 volatile uint8_t g_switch2_counter;
 volatile uint8_t g_switch3_status = 0;
 volatile uint8_t g_mode = 0;
+volatile uint8_t g_current_setup_mode = 16;
 
+volatile void (*init_functions_array[])(void) = {
+	init_mode0
+};
+
+volatile void (*clear_functions_array[])(void) = {
+	clear_mode0
+};
 
 void display_mode(void);
 //timer 0 reserved for 7 segment display
@@ -124,6 +132,18 @@ void display_mode(void)
 	PORTB |= ((g_mode & 0b1000) >> 3) << PB4;
 }
 
+void init_mode(uint8_t mode)
+{
+	if (mode <= 10)
+		init_functions_array[mode]();
+}
+
+void unsetup_mode(uint8_t mode)
+{
+	if (mode <= 10)
+		clear_functions_array[mode]();
+}
+
 int main()
 {
 	DDRD = 0;
@@ -142,5 +162,11 @@ int main()
 	for(;;)
 	{
 		poll_sw3();
+		if (g_current_setup_mode != g_mode)
+		{
+			unsetup_mode(g_current_setup_mode);
+			init_mode(g_mode);
+			g_current_setup_mode = g_mode;
+		}
 	}	
 }
