@@ -1,3 +1,6 @@
+NAME	=	main.hex
+BIN		=	main.bin
+
 DEVICE=atmega328p
 F_CPU = 16000000UL
 BAUDRATE=115200
@@ -5,38 +8,46 @@ PROGRAMMER= -c arduino -b$(BAUDRATE) -p $(DEVICE)
 
 SRCS = main.c uart.c i2c.c i2c_expander.c
 
-BINS = $(SRCS:.c=.bin)
-HEX = main.hex
+OBJS = $(SRCS:.c=.o)
+DEPS = $(OBJS:.o=.d)
 
 CC = avr-gcc
 
 
-CFLAGS = -Wall -D F_CPU=$(F_CPU) -D UART_BAUDRATE=$(BAUDRATE) -mmcu=$(DEVICE) -Os
+CPPFLAGS	=	-Wall -Wextra -D F_CPU=$(F_CPU) -MMD -DUART_BAUDRATE=$(BAUDRATE)
+CFLAGS = -Wall -Wextra -mmcu=$(DEVICE) -Os
 
 all: flash
 
+$(BIN):	$(OBJS)
+	$(CC) $(CFLAGS) $(CPPFLAGS) $^ -o $@
 
-
-%.bin: %.c
+%.o:	%.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
-$(HEX): $(BINS)
-	$(CC) $(CFLAGS) -o linked.bin ${BINS}
-	avr-objcopy -O ihex linked.bin ${HEX}
+$(NAME): $(BIN)
+	avr-objcopy -O ihex ${BIN} ${NAME}
 
+hex: $(NAME)
 
-
-hex: $(HEX)
-
-flash: hex
-	avrdude $(PROGRAMMER) -P /dev/ttyUSB0 -U flash:w:$(HEX):i
+flash: $(NAME)
+	avrdude $(PROGRAMMER) -P /dev/ttyUSB0 -U flash:w:$(NAME):i
 
 # flash2: hex
-# 	avrdude $(PROGRAMMER) -P /dev/ttyUSB1 -U flash:w:$(HEX):i
-# 	avrdude $(PROGRAMMER) -P /dev/ttyUSB0 -U flash:w:$(HEX):i
+# 	avrdude $(PROGRAMMER) -P /dev/ttyUSB1 -U flash:w:$(NAME):i
+# 	avrdude $(PROGRAMMER) -P /dev/ttyUSB0 -U flash:w:$(NAME):i
 
 
 clean:
-	rm -rf $(BINS) $(HEX) linked.bin
+	rm -rf $(OBJS) $(DEPS)
 	
-re: clean all
+fclean: clean
+	rm -rf $(BIN)
+	rm -rf $(NAME)
+
+re: clean
+	make all
+
+-include $(DEPS)
+
+.PHONY: all, hex, flash, clean, re, fclean
