@@ -2,9 +2,9 @@
 
 
 
-uint8_t segment_display_buffer[4];
-uint8_t segment_display_index = 0;
-const uint8_t segment_digit_pins[] =
+uint8_t g_segment_display_buffer[4];
+uint8_t g_segment_display_index = 0;
+const uint8_t g_segment_digit_pins[] =
 {
 	7,
 	6,
@@ -12,7 +12,7 @@ const uint8_t segment_digit_pins[] =
 	4,
 };
 
-volatile uint8_t segment_digits[] =
+volatile uint8_t g_segment_digits[] =
 {
 	0b00111111, //0
 	0b00000110, //1
@@ -53,10 +53,10 @@ void expander_init()
 	i2c_send_byte(&register_status, 1); //second one will automatically be put in register 1
 	i2c_stop();
 
-	segment_display_buffer[0] = 0x0;
-	segment_display_buffer[1] = 0x0;
-	segment_display_buffer[2] = 0x0;
-	segment_display_buffer[3] = 0x0;
+	g_segment_display_buffer[0] = 0x0;
+	g_segment_display_buffer[1] = 0x0;
+	g_segment_display_buffer[2] = 0x0;
+	g_segment_display_buffer[3] = 0x0;
 
 }
 
@@ -68,7 +68,7 @@ uint8_t expander_segment_select_digit(uint8_t select_digit)
 
 	status |= 0b11110000; //clear digits ( clearing is setting bits)
 
-	status &= ~(1 << segment_digit_pins[select_digit]);
+	status &= ~(1 << g_segment_digit_pins[select_digit]);
 
 	return (expander_set_register(SELECT_OUTPUT_PORT0, status));
 }
@@ -145,28 +145,28 @@ void segment_putnbr(uint16_t nbr)
 {
 	clear_segment();
 	if (nbr > 999)
-		segment_display_buffer[3] = segment_digits[nbr / 1000];
+		g_segment_display_buffer[3] = g_segment_digits[nbr / 1000];
 	if (nbr > 99)
-		segment_display_buffer[2] = segment_digits[(nbr % 1000) / 100];
+		g_segment_display_buffer[2] = g_segment_digits[(nbr % 1000) / 100];
 	if (nbr > 9)
-		segment_display_buffer[1] = segment_digits[(nbr % 100) / 10];
-	segment_display_buffer[0] = segment_digits[nbr % 10];
+		g_segment_display_buffer[1] = g_segment_digits[(nbr % 100) / 10];
+	g_segment_display_buffer[0] = g_segment_digits[nbr % 10];
 }
 
 void segment_putnbr_fill_zero(uint16_t nbr)
 {
 	clear_segment();
 
-	segment_display_buffer[3] = segment_digits[nbr / 1000];
-	segment_display_buffer[2] = segment_digits[(nbr % 1000) / 100];
-	segment_display_buffer[1] = segment_digits[(nbr % 100) / 10];
-	segment_display_buffer[0] = segment_digits[nbr % 10];
+	g_segment_display_buffer[3] = g_segment_digits[nbr / 1000];
+	g_segment_display_buffer[2] = g_segment_digits[(nbr % 1000) / 100];
+	g_segment_display_buffer[1] = g_segment_digits[(nbr % 100) / 10];
+	g_segment_display_buffer[0] = g_segment_digits[nbr % 10];
 }
 
 void clear_segment()
 {
-	segment_display_buffer[0] = 0;
-	segment_display_buffer[1] = 0;
-	segment_display_buffer[2] = 0;
-	segment_display_buffer[3] = 0;
+	g_segment_display_buffer[0] = 0;
+	g_segment_display_buffer[1] = 0;
+	g_segment_display_buffer[2] = 0;
+	g_segment_display_buffer[3] = 0;
 }

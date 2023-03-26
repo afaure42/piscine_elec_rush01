@@ -1,7 +1,7 @@
 #include "rush.h"
 
-extern uint8_t segment_display_buffer[4];
-extern uint8_t segment_display_index;
+extern uint8_t g_segment_display_buffer[4];
+extern uint8_t g_segment_display_index;
 
 volatile uint8_t g_switch1_counter;
 volatile uint8_t g_switch2_counter;
@@ -9,14 +9,14 @@ volatile uint8_t g_switch3_status = 0;
 volatile uint8_t g_mode = 0;
 volatile uint8_t g_current_setup_mode = 16;
 
-void (*init_functions_array[])(void) = {
+void (*g_init_functions_array[])(void) = {
 	init_mode0,
 	init_mode1,
 	init_mode2,
 	init_mode3,
 };
 
-void (*clear_functions_array[])(void) = {
+void (*g_clear_functions_array[])(void) = {
 	clear_mode0,
 	clear_mode1,
 	clear_mode2,
@@ -43,21 +43,21 @@ ISR(TIMER0_OVF_vect)
 	}
 
 	//setting digit in display register		
-	if (expander_set_register(SELECT_OUTPUT_PORT1, segment_display_buffer[segment_display_index]) != 0)
+	if (expander_set_register(SELECT_OUTPUT_PORT1, g_segment_display_buffer[g_segment_display_index]) != 0)
 	{
 		uart_print_twi_status();
 		reti();
 	}
 
-	if (expander_segment_select_digit(segment_display_index) != 0)
+	if (expander_segment_select_digit(g_segment_display_index) != 0)
 	{
 		uart_print_twi_status();
 		reti();
 	}
 
-	segment_display_index++;
-	if (segment_display_index == 4)
-		segment_display_index = 0;
+	g_segment_display_index++;
+	if (g_segment_display_index == 4)
+		g_segment_display_index = 0;
 }
 
 //sw1 ISR that can change current mode and light up led D9
@@ -146,13 +146,13 @@ void display_mode(void)
 void init_mode(uint8_t mode)
 {
 	if (mode <= 10)
-		init_functions_array[mode]();
+		g_init_functions_array[mode]();
 }
 
 void unsetup_mode(uint8_t mode)
 {
 	if (mode <= 10)
-		clear_functions_array[mode]();
+		g_clear_functions_array[mode]();
 }
 
 void timer0_init(void)
