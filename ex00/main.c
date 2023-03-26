@@ -1,10 +1,5 @@
 #include "rush.h"
 
-#define LED_D1 PB0
-#define LED_D2 PB1
-#define LED_D3 PB2
-#define LED_D4 PB4
-
 extern uint8_t segment_display_buffer[4];
 extern uint8_t segment_display_index;
 
