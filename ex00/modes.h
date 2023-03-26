@@ -12,4 +12,7 @@ void clear_mode1(void);
 void init_mode2(void);
 void clear_mode2(void);
 
+void init_mode3(void);
+void clear_mode3(void);
+
 #endif

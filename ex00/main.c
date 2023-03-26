@@ -13,12 +13,14 @@ void (*init_functions_array[])(void) = {
 	init_mode0,
 	init_mode1,
 	init_mode2,
+	init_mode3,
 };
 
 void (*clear_functions_array[])(void) = {
 	clear_mode0,
 	clear_mode1,
 	clear_mode2,
+	clear_mode3,
 };
 
 void display_mode(void);
