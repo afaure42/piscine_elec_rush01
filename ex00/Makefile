@@ -6,7 +6,7 @@ F_CPU = 16000000UL
 BAUDRATE=115200
 PROGRAMMER= -c arduino -b$(BAUDRATE) -p $(DEVICE)
 
-SRCS = main.c uart.c i2c.c i2c_expander.c adc.c mode_0.c
+SRCS = main.c uart.c i2c.c i2c_expander.c adc.c mode_0.c mode_1.c
 
 OBJS = $(SRCS:.c=.o)
 DEPS = $(OBJS:.o=.d)

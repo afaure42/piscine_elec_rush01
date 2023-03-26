@@ -6,5 +6,8 @@
 void init_mode0(void);
 void clear_mode0(void);
 
+void init_mode1(void);
+void clear_mode1(void);
+
 
 #endif

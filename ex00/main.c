@@ -10,11 +10,13 @@ volatile uint8_t g_mode = 0;
 volatile uint8_t g_current_setup_mode = 16;
 
 void (*init_functions_array[])(void) = {
-	init_mode0
+	init_mode0,
+	init_mode1
 };
 
 void (*clear_functions_array[])(void) = {
-	clear_mode0
+	clear_mode0,
+	clear_mode1
 };
 
 void display_mode(void);
@@ -139,13 +141,13 @@ void display_mode(void)
 
 void init_mode(uint8_t mode)
 {
-	if (mode == 0)
+	if (mode <= 10)
 		init_functions_array[mode]();
 }
 
 void unsetup_mode(uint8_t mode)
 {
-	if (mode == 0)
+	if (mode <= 10)
 		clear_functions_array[mode]();
 }
 

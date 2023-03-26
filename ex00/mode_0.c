@@ -17,5 +17,7 @@ void clear_mode0(void)
 {
 	uart_printstr("Mode 0 clear\r\n");
 	//disable ADC
+
+	clear_segment();
 	ADCSRA &= ~(1 << ADEN);
 }
