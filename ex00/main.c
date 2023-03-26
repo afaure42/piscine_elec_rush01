@@ -9,11 +9,11 @@ volatile uint8_t g_switch3_status = 0;
 volatile uint8_t g_mode = 0;
 volatile uint8_t g_current_setup_mode = 16;
 
-volatile void (*init_functions_array[])(void) = {
+void (*init_functions_array[])(void) = {
 	init_mode0
 };
 
-volatile void (*clear_functions_array[])(void) = {
+void (*clear_functions_array[])(void) = {
 	clear_mode0
 };
 
@@ -26,29 +26,26 @@ ISR(TIMER0_OVF_vect)
 	//clearing the digit select bit
 	if (expander_get_register(SELECT_OUTPUT_PORT0, &temp) != 0)
 	{
-		// uart_print_twi_status();
-		// uart_printstr("get register failed\r\n");
+		uart_print_twi_status();
 		reti();
 	}
 
 	if (expander_set_register(SELECT_OUTPUT_PORT0, temp | 0b11110000) != 0)
 	{
-		// uart_print_twi_status();
-		// uart_printstr("set register failed\r\n");
+		uart_print_twi_status();
 		reti();
 	}
 
 	//setting digit in display register		
 	if (expander_set_register(SELECT_OUTPUT_PORT1, segment_display_buffer[segment_display_index]) != 0)
 	{
-		// uart_print_twi_status();
-		// uart_printstr("set register failed\r\n");
+		uart_print_twi_status();
 		reti();
 	}
 
 	if (expander_segment_select_digit(segment_display_index) != 0)
 	{
-		// uart_printstr("select digit failed\r\n");
+		uart_print_twi_status();
 		reti();
 	}
 
@@ -95,6 +92,14 @@ ISR(PCINT2_vect)
 	PCIFR |= (1 << PCIF2);
 }
 
+ISR(ADC_vect)
+{
+	uint16_t reading = ADCL;
+	reading = reading | ADCH << 8;
+
+	segment_putnbr_fill_zero(reading);
+}
+
 void poll_sw3(void)
 {
 	uint8_t save_sreg = SREG;
@@ -134,14 +139,22 @@ void display_mode(void)
 
 void init_mode(uint8_t mode)
 {
-	if (mode <= 10)
+	if (mode == 0)
 		init_functions_array[mode]();
 }
 
 void unsetup_mode(uint8_t mode)
 {
-	if (mode <= 10)
+	if (mode == 0)
 		clear_functions_array[mode]();
+}
+
+void timer0_init(void)
+{
+	//just normal mode with 1024 prescaler
+	TCCR0B = (1<< CS02);
+
+	TIMSK0 = (1 << TOIE0); //enabling overflow interrupt to trigger ISR
 }
 
 int main()
@@ -151,6 +164,8 @@ int main()
 	uart_init();
 	i2c_init();
 	expander_init();
+	adc_init();
+	timer0_init();
 
 	EIMSK = (1 << INT0); //enable INT0 on logical change
 	EICRA = (1 << ISC00);
@@ -159,6 +174,8 @@ int main()
 	PCMSK2 = (1 << PCINT20);
 
 	sei();
+
+	init_mode0();
 	for(;;)
 	{
 		poll_sw3();
