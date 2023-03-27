@@ -81,22 +81,34 @@ uint8_t expander_get_register(uint8_t select_register, uint8_t * dest)
 	//sending write 
 	i2c_start(EXPANDER_ADDR, TW_WRITE);
 	if (TWSR != TW_MT_SLA_ACK)
+	{
+		i2c_stop();
 		return (1);
+	}
 
 	//selecting register
 	i2c_send_byte(&command, 1);
 	if (TWSR != TW_MT_DATA_ACK)
+	{
+		i2c_stop();
 		return (1);
+	}
 
 	//going in read mode using repeated start	
 	i2c_start(EXPANDER_ADDR, TW_READ);
 	if (TWSR != TW_MR_SLA_ACK)
+	{
+		i2c_stop();
 		return (1);
+	}
 
 	//reading register value
 	i2c_read_byte(dest, 1);
 	if (TWSR != TW_MR_DATA_NACK)
+	{
+		i2c_stop();
 		return (1);
+	}
 
 	i2c_stop();
 	return 0;
