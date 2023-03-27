@@ -110,16 +110,15 @@ void poll_sw3(void)
 {
 	uint8_t save_sreg = SREG;
 	uint8_t register_status = 0;
-	uint8_t return_value = 0;
 	//clearing interrupt enable flag
 	cli();
 
-	return_value = expander_get_register(SELECT_INPUT_PORT0, &register_status);
-	//reloading saved SREG status
-	SREG = save_sreg;
-
-	if (return_value != 0)//if there was an error with i2c
+	//if there was an error with i2c
+	if (expander_get_register(SELECT_INPUT_PORT0, &register_status) != 0)
+	{
+		SREG = save_sreg;
 		return;
+	}
 
 	//if button just got pressed since last poll
 	if (((register_status & (1 << SW3)) == 0) && g_switch3_status == 1) 
@@ -132,6 +131,8 @@ void poll_sw3(void)
 		g_switch3_status = 1;
 		exp_set_pin(LED_D11, 0);
 	}
+	//reloading saved SREG status
+	SREG = save_sreg;
 }
 
 void display_mode(void)
@@ -181,13 +182,14 @@ int main()
 
 	sei();
 
-	init_mode0();
 	for(;;)
 	{
 		poll_sw3();
-		if (g_current_setup_mode != g_mode)
+		if (g_current_setup_mode != g_mode
+			&& g_mode <= 3)
 		{
-			unsetup_mode(g_current_setup_mode);
+			if (g_current_setup_mode < 10)
+				unsetup_mode(g_current_setup_mode);
 			init_mode(g_mode);
 			g_current_setup_mode = g_mode;
 		}
